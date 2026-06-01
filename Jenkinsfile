@@ -1,5 +1,3 @@
-
-
 pipeline {
     agent any
 
@@ -17,16 +15,29 @@ pipeline {
             }
         }
 
-        stage('Docker Images') {
+        stage('Deploy') {
             steps {
-                sh 'docker images | grep cicd-app'
+                sh '''
+                docker rm -f cicd-container || true
+
+                docker run -d \
+                --name cicd-container \
+                -p 8081:80 \
+                cicd-app:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh 'docker ps'
             }
         }
     }
 
     post {
         success {
-            echo 'Docker Build Success'
+            echo 'Deployment Successful'
         }
 
         failure {
