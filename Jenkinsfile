@@ -1,13 +1,9 @@
+
+
 pipeline {
     agent any
 
     stages {
-
-        stage('Checkout') {
-            steps {
-                echo 'Checkout Stage Started'
-            }
-        }
 
         stage('Build') {
             steps {
@@ -15,10 +11,26 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Docker Build') {
             steps {
-                echo 'Test Stage Successful'
+                sh 'docker build -t cicd-app:${BUILD_NUMBER} .'
             }
+        }
+
+        stage('Docker Images') {
+            steps {
+                sh 'docker images | grep cicd-app'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Docker Build Success'
+        }
+
+        failure {
+            echo 'Pipeline Failed'
         }
     }
 }
