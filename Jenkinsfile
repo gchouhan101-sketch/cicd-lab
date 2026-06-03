@@ -11,7 +11,27 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t cicd-app:${BUILD_NUMBER} .'
+                sh 'docker build -t girjesh111/cicd-app:${BUILD_NUMBER} .'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh 'docker push girjesh111/cicd-app:${BUILD_NUMBER}'
             }
         }
 
@@ -23,21 +43,15 @@ pipeline {
                 docker run -d \
                 --name cicd-container \
                 -p 8081:80 \
-                cicd-app:${BUILD_NUMBER}
+                girjesh111/cicd-app:${BUILD_NUMBER}
                 '''
-            }
-        }
-
-        stage('Verify') {
-            steps {
-                sh 'docker ps'
             }
         }
     }
 
     post {
         success {
-            echo 'Deployment Successful'
+            echo 'Pipeline Success'
         }
 
         failure {
